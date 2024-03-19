@@ -1,0 +1,1309 @@
+<html>
+
+<head>
+<title>Part 1 - Simple graphics</title>
+<meta http-equiv="content-type" content="text/html; charset=UTF8">
+
+<style>
+    canvas {border: solid 1px black}
+    svg {border: solid 1px black}
+    td {vertical-align: top;}
+    #msgBox {color:gray;}
+    h1, h2, h3, h4 {margin-top: 5px; margin-bottom: 5px;}
+</style>
+</head>
+
+<script src="drawInPerspective.js"></script>
+<script src="Classes.js"></script>
+<script src="main.js"></script>
+<script src="wireframe.js"></script>
+<script type="text/javascript">
+
+	var canvas;
+    var ctx;
+	var ctx2;
+    var svg;
+	var imgMan;
+	var depth2 = new Image();
+	var depth1 = new Image();
+	var wall = new Image();
+	var town = new Image();
+	var cursor = new Image();
+	var exit = new Image();
+	var shop = new Image();
+	var inn = new Image();
+	var bar = new Image();
+	var back = new Image();
+	var goblin = new Image();
+	var undead = new Image();
+	var boss = new Image();
+	var HPotion = new Image();
+	var MPotion = new Image();
+	var dragon = new Image();
+	var warrior = new Image();
+	var itm //global variable to reference in other function
+	//for use of item outside of battle
+	var mage = new Image();
+	var enemyMap = {"Goblin": goblin, "Dragon": dragon, "Undead": undead, "Boss": boss} 
+	var upPressed = false;
+	var downPressed = false;
+	var leftPressed = false;
+	var rightPressed = false;
+	var confirmPressed = false;
+
+
+	//pass image, this will make it bluer depending on depth on canvas 2, and return an Image object of the image data
+	function addDepth(img, depth){
+				ctx2.drawImage(img,0,0);
+				toDraw = ctx2.getImageData(0, 0, 400, 320);
+            
+			
+				//go through image to make it more blue
+				var idx, n;
+
+				for (var x=0; x<toDraw.width; x++) {
+					for (var y=0; y<toDraw.height; y++) {
+						n = x+y*toDraw.width;
+						idx = 4*n;
+						//R = image.data[idx];
+						//G = image.data[idx+1];
+						//B = image.data[idx+2];
+						toDraw.data[idx+2] += 30*depth
+					}
+				}
+			
+				//put back on second canvas for testing
+				ctx2.putImageData(toDraw, 0, 0);
+			
+				//convert blue'd wall to image type
+				var image = new Image();
+				image.src = imgMan.toDataURL();
+				return image;
+	}
+
+
+	//and then divide them into blocks, where each block has a display settimg
+	//pass block id and it will draw it
+	function drawBlock(id)
+	{
+		//draw blocks according to id
+		switch(id) {
+		case 0:
+			//var image = addDepth(img,2);
+			ctx.drawImage(depth2, flat4.x,flat4.y,flat4.w,flat4.h);
+			break;
+		case 1:
+			//sec 4
+			//var image = addDepth(img,1);
+			drawImageInPerspective(
+         		depth1, canvas,
+		 		sec4.x[0],sec4.y[0],
+		 		sec4.x[1],sec4.y[1],
+		 		sec4.x[2],sec4.y[2],
+		 		sec4.x[3],sec4.y[3]
+			)
+			break;
+		case 2:
+			//var image = addDepth(img,1);
+			//sec2
+			drawImageInPerspective(
+         		depth1, canvas,
+		 		sec2.x[0],sec2.y[0],
+		 		sec2.x[1],sec2.y[1],
+		 		sec2.x[2],sec2.y[2],
+		 		sec2.x[3],sec2.y[3]
+			)
+			ctx.drawImage(depth1, flat2.x,flat2.y,flat2.w,flat2.h);
+			break;
+		case 3:
+			//sec 5
+			//var image = addDepth(img,1);
+			drawImageInPerspective(
+         		depth1, canvas,
+		 		sec5.x[0],sec5.y[0],
+		 		sec5.x[1],sec5.y[1],
+		 		sec5.x[2],sec5.y[2],
+		 		sec5.x[3],sec5.y[3]
+			)
+			break;
+		case 4:
+			//var image = addDepth(img,1);
+			//sec3
+			drawImageInPerspective(
+         		depth1, canvas,
+		 		sec3.x[0],sec3.y[0],
+		 		sec3.x[1],sec3.y[1],
+		 		sec3.x[2],sec3.y[2],
+		 		sec3.x[3],sec3.y[3]
+			)
+			ctx.drawImage(depth1, flat3.x,flat3.y,flat3.w,flat3.h);
+			break;
+		case 5:
+			//var image = addDepth(img,1);
+			ctx.drawImage(depth1, flat1.x,flat1.y,flat1.w,flat1.h);
+			break;
+		case 6:
+			//sec 0
+			drawImageInPerspective(
+         		wall, canvas,
+		 		sec0.x[0],sec0.y[0],
+		 		sec0.x[1],sec0.y[1],
+		 		sec0.x[2],sec0.y[2],
+		 		sec0.x[3],sec0.y[3]
+			)
+			break;
+		case 7:
+			//sec 1
+			drawImageInPerspective(
+         		wall, canvas,
+		 		sec1.x[0],sec1.y[0],
+		 		sec1.x[1],sec1.y[1],
+		 		sec1.x[2],sec1.y[2],
+		 		sec1.x[3],sec1.y[3]
+			)
+			break;
+		case 8:	
+			ctx.drawImage(wall, flat0.x,flat0.y,flat0.w,flat0.h);
+			break;	
+	}
+	return true;
+}
+
+function drawExit(id){
+	switch(id) {
+		case 0:
+			ctx.drawImage(exit, flat4.x,flat4.y,flat4.w,flat4.h); //block 0
+			break;
+		case 1:
+			ctx.drawImage(exit, flat1.x,flat1.y,flat1.w,flat1.h); //block 5
+			break;
+		case 2:
+			ctx.drawImage(exit, flat0.x,flat0.y,flat0.w,flat0.h); //block 8
+			break;
+	}
+}
+
+
+
+/* CONTROLS */
+
+function initKeys(canvas) {
+        // Make sure the canvas can receive the key events
+        canvas.setAttribute('tabindex','0');
+        canvas.focus();
+
+        // Register the keyDown and keyUp events
+        canvas.addEventListener( "keydown", onKeyDown, true);
+        canvas.addEventListener( "keyup", onKeyUp, true);
+    }
+	
+
+ function onKeyDown(event) {
+        
+        if (event.code == "ArrowLeft" || event.code == "KeyJ") { // Left
+			leftPressed = true
+        }
+        // Code for ArrowRight, ArrowUp, ArrowDown
+        if (event.code == "ArrowRight" || event.code == "KeyL") {
+			rightPressed = true
+		}
+		if (event.code == "ArrowUp" || event.code == "KeyI") {
+			upPressed = true
+		}
+		if (event.code == "ArrowDown" || event.code == "KeyK") {
+			downPressed = true
+		}
+		if (event.code == "KeyZ")
+			confirmPressed = true
+	}
+	
+function onKeyUp(event) {
+        
+        if (event.code == "ArrowLeft" || event.code == "KeyJ") { // Left
+            leftPressed = false
+        }
+		if (event.code == "ArrowRight" || event.code == "KeyL") { // Left
+			rightPressed = false
+		}
+		if (event.code == "ArrowUp" || event.code == "KeyI") { // Left
+			upPressed = false
+		}
+		if (event.code == "ArrowDown" || event.code == "KeyK") { // Left
+			downPressed = false
+		}	
+		if (event.code == "KeyZ")
+			confirmPressed = false
+	}
+	
+
+
+//tick and update
+var startTime = 0;
+var lastTime = 0;
+var elapsed = 0, totalElapsed = 0;
+var moved = false;
+
+//init time for movement
+var timeNow = new Date().getTime() / 1000; // All expressed in seconds
+lastTime = timeNow
+
+function updateTime() {
+       timeNow = new Date().getTime() / 1000; 
+       if (lastTime != 0) {
+           elapsed = timeNow - lastTime;
+       } else {
+           startTime = timeNow;
+       }
+	   if(moved) {lastTime = timeNow; moved = false}
+       totalElapsed = timeNow - startTime;
+	}
+
+
+
+//change pos 
+function animate(){
+	if(elapsed > 0.3 && moved==false)
+	{
+		//if in walking state then change pos
+		if(model.state == "walk"){
+			if(upPressed)
+			{
+				updatePosition('forward')
+				updateVisible()
+				moved = true
+				updateTime()
+			}
+			if(downPressed)
+			{
+				updatePosition('backward')
+				updateVisible()
+				moved = true
+				updateTime()
+			}
+			if(rightPressed)
+			{
+				updatePosition('right')
+				updateVisible()
+				moved = true
+				updateTime()
+			}
+			if(leftPressed)
+			{
+				updatePosition('left')
+				updateVisible()
+				moved = true
+				updateTime()
+			}
+			if(confirmPressed)
+			{
+				//change state to display inventory
+				model.state = states[3] //change state to inventory state
+				moved = true
+				confirmPressed = false;
+				updateTime()
+			}
+		}
+		
+		//if in menu state change menu index
+		if(model.state == "menu")
+		{
+			if(upPressed)
+			{
+				model.selected -= 1;
+				if(model.selected<0) {model.selected = 0}
+				moved = true
+				updateTime()
+			}
+			if(downPressed)
+			{
+				model.selected += 1;
+				model.selected = model.selected%model.menu.length
+				moved = true
+				updateTime()
+			}
+			if(confirmPressed)
+			{
+				switch (model.menu) {
+					case (townMenu):
+						switch (model.selected) {
+							case 0: 
+								model.location = locations[2] //inn
+								model.menu = innMenu //change menu
+								model.selected = 0; //reset cursor
+								confirmPressed = false //deselect confirm
+								model.currLine = "It'll be 20G a night."
+								updateTime()
+								break;
+					
+							case 1:
+								model.location = locations[1] //shop
+								model.menu = shopMenu //change menu
+								model.selected = 0; //reset cursor
+								confirmPressed = false //deselect confirm
+								model.currLine = "Take a look!"
+								updateTime()
+								break;
+					
+							case 2:
+								model.location = locations[3] //bar
+								model.menu = barMenu //change menu
+								model.selected = 0; //reset cursor
+								confirmPressed = false //deselect confirm
+								model.currLine = "Welcome, travelers."
+								updateTime()
+								break;
+					
+							case 3:
+								model.location = locations[4] //dungeon
+								model.menu = null //change menu
+								model.selected = 0; //reset cursor
+								model.state = states[1]; //change state to walk
+								confirmPressed = false //deselect confirm
+								model.currLine = null //just making sure
+								updateTime()
+								break;
+						}
+					break;
+				
+					case (shopMenu):
+						switch(model.selected){
+							case 0:
+								if(model.money >= 30)
+								{
+									if(model.inventory.length<model.inventoryLimit){
+									model.money -= 30;
+									model.inventory.push(items[0])
+									model.currLine = "Thanks!"
+									drawAll()
+									}
+									else{
+									model.currLine = "Your inventory's full."
+									drawAll()
+									}
+								}
+								else{
+								model.currLine = "You don't have enough money"
+								drawAll()
+								}
+								//add potion to inventory if enough money and inventory not full
+								//if not enough money display message
+								//if inventory full display message
+								updateTime()
+								confirmPressed = false;
+								break;
+							case 1:
+								if(model.money >= 50)
+								{
+									if(model.inventory.length<model.inventoryLimit){
+									model.money -= 50;
+									model.inventory.push(items[1])
+									model.currLine = "Thanks!"
+									drawAll()
+									}
+									else{
+									model.currLine = "Your inventory's full."
+									drawAll()
+									}
+								}
+								else{
+								model.currLine = "You don't have enough money"
+								drawAll()
+								}
+								//add mp potion to inventory if enough money and inventory not full
+								//if not enough money display message
+								//if inventory full display message
+								confirmPressed = false;
+								updateTime()
+								drawAll()
+								break;
+							case 2:
+								model.location = locations[0] //town
+								model.menu = townMenu //change menu
+								model.selected = 0; //reset cursor
+								confirmPressed = false //deselect confirm
+								model.currLine = null;
+								updateTime()
+								drawAll()
+								break;			
+						}
+					break;				
+				
+				
+			    	case (innMenu):
+						switch(model.selected){
+							case 0:
+								//if enough money
+								if(model.money >= 20){
+									model.currLine = "Thanks!"
+									model.characters[0].health = model.characters[0].maxHealth //restore hp and mp for both characters
+									model.characters[0].magic = model.characters[0].maxMagic
+								
+									model.characters[1].health = model.characters[1].maxHealth //restore hp and mp for both characters
+									model.characters[1].magic = model.characters[1].maxMagic
+								
+									model.money -= 20;
+								
+									drawAll()
+								}
+								else{
+									model.currLine = "You don't have enough money"
+									drawAll()
+								}
+								//restore all hp and mp
+								//if not enough money display message
+								confirmPressed = false
+								updateTime()
+								break;
+							case 1:
+								model.location = locations[0] //town
+								model.menu = townMenu //change menu
+								model.selected = 0; //reset cursor
+								confirmPressed = false ;//deselect confirm
+								model.currLine = null;
+								drawAll();
+								updateTime();
+								break;
+						}		   
+						break;
+
+			    case (barMenu):
+					switch(model.selected){
+						case 0:
+							//display npc dialogue
+							confirmPressed = false;
+							model.currLine = "Be careful around dragons.";
+							updateTime();
+							drawAll();
+							break;
+						case 1:
+							//display npc dialogue
+							confirmPressed = false;
+							model.currLine = "Have you wandered far enough in?";
+							updateTime();
+							drawAll();
+							break;
+						case 2:
+							//display npc dialogue
+							confirmPressed = false;
+							model.currLine = "Eeby Deeby";
+							updateTime();
+							drawAll();
+							break;
+						case 3:
+							model.location = locations[0] //town
+							model.menu = townMenu //change menu
+							model.selected = 0; //reset cursor
+							confirmPressed = false //deselect confirm
+							model.currLine = null
+							updateTime()
+							drawAll()
+							break;
+					}
+					break;
+			   
+			   
+			   }
+			}
+		
+		}
+
+		if (model.state == 'battle' || model.state == 'boss') {
+			if(upPressed)
+			{
+				model.selected -= 1;
+				if(model.selected<0) {model.selected = 0}
+				moved = true
+				updateTime()
+			}
+			if(downPressed)
+			{
+				model.selected += 1;
+				model.selected = model.selected%model.menu.length
+				moved = true
+				updateTime()
+			}
+			if(confirmPressed)
+			{
+				switch (model.menu) {
+					case targetMenu:
+						if (model.selected < model.menu.length - 1) {
+							if (model.chosenAttack instanceof Attack) {
+								attack(model.selected + friendlyCount(), model.chosenAttack);
+							}
+							else if (model.chosenAttack instanceof Spell) {
+								spell(model.selected + friendlyCount(), model.chosenAttack);
+							}
+							else {
+								item(model.selected, model.chosenAttack)
+							}
+							confirmPressed = false;
+							model.menu = battleMenu
+						}
+						else {
+							if (model.chosenAttack instanceof Attack) {
+								model.menu = attackMenu;
+								confirmPressed = false;
+								updateTime();
+							}
+							else if (model.chosenAttack instanceof Spell) {
+								model.menu = magicMenu;
+								confirmPressed = false;
+								updateTime();
+							}
+						}
+						break;
+				
+					case itemMenu:
+						if (model.selected < model.menu.length - 1) {
+							model.chosenAttack = model.menu[model.selected];
+							populateTargetMenu('item');
+							model.menu = targetMenu;
+							confirmPressed = false;
+							updateTime();
+						}
+						else {
+							model.menu = battleMenu;
+							confirmPressed = false;
+							updateTime();
+						}
+						break;
+
+					case magicMenu:
+						if (model.selected < model.menu.length - 1) {
+							model.chosenAttack = model.battleCycle[model.currentTurn].spells[model.selected];
+							populateTargetMenu('attack');
+							model.menu = targetMenu;
+							confirmPressed = false;
+							updateTime();
+						}
+						else {
+							model.menu = battleMenu;
+							confirmPressed = false;
+							updateTime();
+						}
+						break;
+
+					case attackMenu:
+						if (model.selected < model.menu.length - 1) {
+							model.chosenAttack = model.battleCycle[model.currentTurn].attacks[model.selected];
+							populateTargetMenu('attack');
+							model.menu = targetMenu;
+							confirmPressed = false;
+							updateTime();
+						}
+						else {
+							model.menu = battleMenu;
+							confirmPressed = false;
+							updateTime();
+						}
+						break;
+				
+					case battleMenu:
+						switch(model.selected) {
+							case 0:
+								populateAttackMenu();
+								model.menu = attackMenu;
+								confirmPressed = false;
+								updateTime();
+								break;
+							case 1:
+								populateMagicMenu();
+								model.menu = magicMenu;
+								confirmPressed = false;
+								updateTime();
+								break;
+							case 2:
+								populateItemMenu();
+								model.menu = itemMenu;
+								confirmPressed = false;
+								updateTime();
+								break;
+					}
+				}
+				
+			}
+		}
+		
+		if(model.state == "inventory") {
+		if(upPressed)
+			{
+				if(model.selected-3 > 0){model.selected-=3} //if selected doesnt go below zero then move up one row
+				moved = true
+				upPressed = false
+				drawAll()
+				
+			}
+			if(downPressed)
+			{
+				model.selected += 3;
+				model.selected = model.selected%12
+				moved = true
+				downPressed = false
+				drawAll()
+				
+			}
+			if(rightPressed)
+			{	
+				model.selected+=1
+				model.selected = model.selected%12
+				moved = true
+				rightPressed = false
+				drawAll()
+			}
+			if(leftPressed)
+			{
+				model.selected-=1
+				if(model.selected<0) {model.selected = 0}
+				moved = true
+				leftPressed = false
+				drawAll()
+			}
+			if(confirmPressed)
+			{
+				if(model.selected == 11)
+				{
+				model.state = "walk" //close menu and continue walking
+				confirmPressed = false;
+				drawAll()
+				}
+				else{
+				if(model.inventory[model.selected] != null) { //if the slot youre pointing to on inventory has something				
+					itm = model.inventory[model.selected] //selected item
+					model.state = "charselect" //change to char select
+					model.selected = 0
+					confirmPressed = false
+					moved = true
+					drawAll()
+					
+				//switch to char select state
+				//allow to use potion or mp potion on characters
+				//change hp or mp accordingly
+				//remove item from inventory
+				}
+				}
+			}
+			}
+		if(model.state == "charselect"){
+			if(rightPressed)
+			{	
+				model.selected+=1
+				model.selected = model.selected%2
+				moved = true
+				rightPressed = false
+				drawAll()
+			}
+			if(leftPressed)
+			{
+				model.selected-=1
+				if(model.selected<0) {model.selected = 1}
+				moved = true
+				leftPressed = false
+				drawAll()
+			}
+			if(confirmPressed)
+			{
+				if(itm == "H")
+				{item(model.selected,"Potion")}
+				else{item(model.selected,"Elixir")}
+				
+				confirmPressed = false
+				//model.selected will be 0 or 1bc only 2 characters
+				moved = true
+				model.state = "inventory"
+				drawAll()
+			}
+		}
+	}
+	
+}
+
+
+
+function onTick() {
+        updateTime()
+		animate()
+        drawAll()
+        requestAnimationFrame(onTick);
+    }
+
+    /* ### Mouse ### */
+    
+    function initMouse(canvas) {
+        canvas.addEventListener("mousedown", onMouseDown, false);
+    }
+    function onMouseDown(event) {
+        console.log("onMouseDown: event = ", event);        
+        
+    }
+
+    /* ### Drawing ### */
+
+    function drawCanvas(c) {
+        
+
+    }
+	
+	//DRAW FUNCTIONS
+	
+	//from https://stackoverflow.com/questions/13627111/drawing-text-with-an-outer-stroke-with-html5s-canvas
+	function drawStroked(text, x, y) {
+		ctx.font = '40px Sans-serif';
+		ctx.strokeStyle = 'white';
+		ctx.lineWidth = 4;
+		ctx.strokeText(text, x, y);
+		ctx.fillStyle = '#ad2f26';
+		ctx.fillText(text, x, y);
+	}
+	
+	function drawCompass(){
+		drawStroked('N',30,50);
+		ctx.fillStyle = '#ad2f26';
+		ctx.beginPath();
+		ctx.arc(45, 100, 10, 0, 2 * Math.PI);
+		ctx.fill();
+		
+		ctx.save()
+		
+		ctx.setTransform(1,0, 0,1, 0,0);
+		
+		ctx.translate(45,100);
+		var angle
+		switch(model.facing){
+			case 0:
+			angle = 0
+			break;
+			case 1:
+			angle = 90
+			break;
+			case 2:
+			angle = 180
+			break;
+			case 3:
+			angle = 270
+			break;		
+		}
+		ctx.rotate(angle*Math.PI/180)
+		
+		
+		//arrow
+		
+		ctx.beginPath();
+		ctx.moveTo(0,0);
+		ctx.lineTo(-10,0);
+		ctx.lineTo(0,-50);
+		ctx.lineTo(10,0);
+		
+		ctx.fill();
+		
+		
+		
+		ctx.restore()
+		
+	}
+	
+	//MENU DRAW FUNCTIONS
+	
+	
+	function drawMoney() {
+		ctx.fillStyle = "black";
+		ctx.font = "40px Sans-serif";
+		ctx.strokeStyle = "white";
+		ctx.beginPath()
+		
+		ctx.rect(600,40,150,60);
+		ctx.stroke();
+		ctx.fill();
+		ctx.beginPath();
+		ctx.fillStyle = 'white';
+		ctx.fillText("G"+model.money,610,80);
+	}
+	
+	function drawGameText(){
+		var topSpace = 450
+		var padding = 40
+		ctx.fillStyle = "black";
+		ctx.font = "40px Sans-serif";
+		ctx.strokeStyle = "white";
+		
+		ctx.beginPath();
+		ctx.rect(padding,topSpace,720,100);
+		ctx.stroke()
+		ctx.fill()
+		ctx.beginPath();
+		ctx.strokeText(model.currLine,padding+10,topSpace+30);
+	}
+	
+	//this is for regular menu
+	function drawMenu() {
+		var topSpace = 40; //space from top
+		var spacing = 80; //space between options
+		var padding = 40; //padding from left
+		ctx.fillStyle = "black";
+		ctx.font = "40px Sans-serif";
+		ctx.strokeStyle = "white";
+		
+		for(let i = 0; i<model.menu.length; i++)
+		{
+			ctx.fillStyle = 'black';
+			ctx.beginPath()
+			ctx.rect(padding,topSpace+(spacing*i),250,60);
+			ctx.stroke()
+			ctx.fill();
+			ctx.beginPath();
+			ctx.fillStyle = 'white';
+			ctx.fillText(model.menu[i],padding+20,topSpace+(spacing*i)+40);
+			
+			if(i==model.selected){
+				ctx.drawImage(cursor,padding-30,topSpace+(spacing*i))
+			}
+			
+		}
+	
+	}
+	
+	function drawBattleText() {
+		ctx.fillStyle = "black";
+		ctx.strokeStyle = "white";
+		ctx.beginPath();
+	
+		ctx.rect(410,400,350,75)
+		ctx.stroke()
+		ctx.fill()
+	
+		//display combatlines
+		if(model.combatLine) {
+			ctx.fillStyle = "white";
+			ctx.font = "20px Sans-serif"
+			ctx.fillText(model.combatLine,415,440)
+			
+		}
+	}
+	
+	function drawEnemies() {
+		if (model.state != 'boss') {
+			var enemies = [];
+			for (var i = 0; i < model.battleCycle.length; i++) {
+				if (model.battleCycle[i] instanceof Enemy) {
+					enemies.push(model.battleCycle[i]);
+				}
+			}
+
+			//We take 50 pixels from each side as margin and then divide the remaining space by the amount of enemies (max 2)
+			var sectionSize = (canvas.width - 100) / enemies.length
+
+			var sections = [50];
+			for (var i = 0; i < enemies.length - 1; i++) {
+				sections.push(sections[i] + sectionSize);
+			}
+
+			for (var i = 0; i < enemies.length; i++) {
+				var enemy = enemyMap[enemies[i].name];
+				ctx.drawImage(enemy, sections[i], 200, 200, 300) 
+			}
+		}
+		else {
+			var enemy = enemyMap[model.battleCycle[friendlyCount()].name];
+		
+			ctx.drawImage(enemy, 300, 200, 200, 300);
+		}
+	}
+
+
+	function drawBattleUI () {
+		var topSpace = 40; 
+		var spacing = 80; 
+		var padding = 40; 
+		playerMenuCoordinates = [{x: 50, y: 550}, {x: 250, y: 550}, {x: 350, y: 550}, {x: 550, y: 550}];
+		characters = [];
+
+		//Getting all characters
+		for (var i = 0; i < model.battleCycle.length; i++) {
+			if (model.battleCycle[i] instanceof Character) {
+				characters.push(model.battleCycle[i]);
+			}
+		}
+
+		//Drawing a box for each character
+		for (var i = 0; i < characters.length; i++) {
+			ctx.strokeStyle = 'white';
+			ctx.fillStyle = 'black';
+			
+			if (i == model.currentTurn) {
+				ctx.beginPath();
+				ctx.rect(playerMenuCoordinates[i].x, playerMenuCoordinates[i].y - 100, 150, 150);
+				ctx.stroke();
+				ctx.fill();
+				ctx.font = "25px Sans-serif";
+				ctx.beginPath()
+				ctx.fillStyle = 'white';
+				ctx.fillText(model.battleCycle[model.currentTurn].name, playerMenuCoordinates[i].x + 25, (playerMenuCoordinates[i].y - 70));
+				for(let j = 0; j < model.menu.length; j++) {
+					
+					
+					ctx.beginPath()
+					ctx.fillText(model.menu[j], playerMenuCoordinates[i].x + 25, (playerMenuCoordinates[i].y - 40) + 30 * j);
+			
+					if(j == model.selected){
+						ctx.drawImage(cursor, playerMenuCoordinates[i].x - 25, (playerMenuCoordinates[i].y - 60) + 30 * j)
+					}
+				}
+			}
+			
+			else {
+				ctx.beginPath();
+				ctx.fillStyle = 'black';
+				ctx.rect(playerMenuCoordinates[i].x, playerMenuCoordinates[i].y, 150, 50);
+				ctx.stroke();
+				ctx.fill();
+				ctx.font = "25px Sans-serif";
+				ctx.fillStyle = 'white';
+				ctx.fillText(model.battleCycle[i].name, playerMenuCoordinates[i].x + 25, playerMenuCoordinates[i].y + 30);
+			}
+
+			//Health and MP Bar
+			ctx.beginPath();
+			ctx.fillStyle = 'black';
+			ctx.rect(playerMenuCoordinates[i].x + 25, 40, 100, 65);
+			ctx.stroke();
+			ctx.fill();
+
+			var maxBarWidth = 65;
+			ctx.beginPath();
+			ctx.fillStyle = "green";
+			ctx.rect(playerMenuCoordinates[i].x + 40, 60, maxBarWidth * (model.battleCycle[i].health / model.battleCycle[i].maxHealth), 10);
+			ctx.stroke();
+			ctx.fill();
+
+			ctx.beginPath();
+			ctx.fillStyle = "blue";
+			ctx.rect(playerMenuCoordinates[i].x + 40, 80, maxBarWidth * (model.battleCycle[i].magic / model.battleCycle[i].maxMagic), 10);
+			ctx.stroke();
+			ctx.fill();
+
+
+		}
+
+
+
+	}
+	
+	function drawStats() {
+	
+	var statsX = 40
+	//this draws the bars and spaces
+	for (var i = 0; i < model.characters.length; i++) {
+			ctx.fillStyle = "black"
+			ctx.beginPath();
+			ctx.rect(statsX + 200*i, 450, 200, 128);
+			ctx.stroke();
+			ctx.fill();
+			
+			if(i==0) {ctx.drawImage(warrior,statsX+200*i,450)}
+			else(ctx.drawImage(mage,statsX+200*i,450))
+
+			var maxBarWidth = 65;
+			ctx.beginPath();
+			ctx.fillStyle = "green";
+			ctx.rect(statsX + 200*i + 128, 470, maxBarWidth * (model.characters[i].health / model.characters[i].maxHealth), 10);
+			ctx.stroke();
+			ctx.fill();
+
+			ctx.beginPath();
+			ctx.fillStyle = "blue";
+			ctx.rect(statsX + 200*i + 128, 490, maxBarWidth * (model.characters[i].magic / model.characters[i].maxMagic), 10);
+			ctx.stroke();
+			ctx.fill();
+	}
+	}
+
+	//battle menu
+	function drawBattle() {
+		drawEnemies();
+		drawBattleUI();
+		drawBattleText();
+	}
+	
+	//inventory menu
+	function drawInventory() {
+	
+		var x = 100
+		var y = 100
+		padding = 75
+		xSpace = 200
+		spacing = 25
+		ySpace = 100
+		yRow = 0
+		ctx.fillStyle = "black";
+		ctx.strokeStyle = "white";
+		
+		//inventory block
+		ctx.beginPath()
+		ctx.rect(x,y,600,400);
+		ctx.stroke()
+		ctx.fill();
+		
+		//display blocks + items
+		for(let i=0;i<model.inventoryLimit+1;i++)
+		{
+			ctx.beginPath()
+			ctx.rect(x+padding+xSpace*(i%3),y+spacing+ySpace*yRow,50,50);
+			ctx.stroke()
+			
+			if(i%3 == 0 && i>0) //change row if reached multiple of 3 that isnt 0
+			{yRow += 1}
+			
+			if(i==11) //display back arrow on slot 0
+			{
+				ctx.drawImage(back,x+padding+xSpace*(i%3),y+spacing+ySpace*yRow)
+			}
+			
+			else{
+			
+			if(model.inventory[i] != null){
+			//draw HP potion
+				if(model.inventory[i] == "H"){ctx.drawImage(HPotion,x+padding+xSpace*(i%3),y+spacing+ySpace*yRow)}
+			//draw MP potion
+				else{ctx.drawImage(MPotion,x+padding+xSpace*(i%3),y+spacing+ySpace*yRow)}
+			}}
+			
+			if(i==model.selected) //display cursor on selection
+			{
+				ctx.beginPath()
+				ctx.drawImage(cursor,(x+padding+xSpace*(i%3))-20,y+spacing+ySpace*yRow)
+			}
+		}
+	}
+
+	
+	
+	//char select menu
+	function drawCharSelect() {
+		//same as draw stats but with a cursor sorry
+		var statsX = 40
+		for (var i = 0; i < model.characters.length; i++) {
+			ctx.fillStyle = "black"
+			ctx.beginPath();
+			ctx.rect(statsX + 200*i, 450, 200, 128);
+			ctx.stroke();
+			ctx.fill();
+			
+			if(i==0) {ctx.drawImage(warrior,statsX+200*i,450)}
+			else(ctx.drawImage(mage,statsX+200*i,450))
+			
+			if(i==model.selected){
+				ctx.drawImage(cursor, statsX-20 + 200*i, 450)
+			}
+
+			var maxBarWidth = 65;
+			ctx.beginPath();
+			ctx.fillStyle = "green";
+			ctx.rect(statsX + 200*i + 128, 470, maxBarWidth * (model.characters[i].health / model.characters[i].maxHealth), 10);
+			ctx.stroke();
+			ctx.fill();
+
+			ctx.beginPath();
+			ctx.fillStyle = "blue";
+			ctx.rect(statsX + 200*i + 128, 490, maxBarWidth * (model.characters[i].magic / model.characters[i].maxMagic), 10);
+			ctx.stroke();
+			ctx.fill();
+		}
+	}
+	
+	
+	
+	//LOCATION DRAW FUNCTIONS
+	
+	function drawDungeon()
+	{		
+		//draw ceiling
+		ctx.fillStyle = "#e0dd6e";
+		ctx.fillRect(0,0,800,150);
+		
+		ctx.fillStyle = "#cfb653";
+		ctx.fillRect(0,150,800,75);
+		
+		//draw floor
+		ctx.fillStyle = "#7e4a8a";
+		ctx.fillRect(0,375,800,75);
+		
+		ctx.fillStyle = "#ac80c4";
+		ctx.fillRect(0,450,800,150);
+		
+		//draw void at back
+		ctx.fillStyle = "#121236";
+		ctx.fillRect(0,225,800,150);
+		
+	
+		//draw walls according to whats visible
+		if (map[model.visible.centerD3.x][model.visible.centerD3.y] == "W"){drawBlock(0)}
+			else if (map[model.visible.centerD3.x][model.visible.centerD3.y] == "E"){drawExit(0)}
+		if (map[model.visible.leftD22.x][model.visible.leftD22.y] == "W"){drawBlock(1)}
+		if (map[model.visible.leftD12.x][model.visible.leftD12.y] == "W"){drawBlock(2)}
+		if (map[model.visible.rightD22.x][model.visible.rightD22.y] == "W"){drawBlock(3)}
+		if (map[model.visible.rightD12.x][model.visible.rightD12.y] == "W"){drawBlock(4)}
+		if (map[model.visible.centerD2.x][model.visible.centerD2.y] == "W"){drawBlock(5)}
+			else if (map[model.visible.centerD2.x][model.visible.centerD2.y] == "E"){drawExit(1)}	
+		if (map[model.visible.leftD11.x][model.visible.leftD11.y] == "W"){drawBlock(6)}
+		if (map[model.visible.rightD11.x][model.visible.rightD11.y] == "W"){drawBlock(7)}
+		if (map[model.visible.centerD1.x][model.visible.centerD1.y] == "W"){drawBlock(8)}
+			else if (map[model.visible.centerD1.x][model.visible.centerD1.y] == "E"){drawExit(2)}
+		
+		
+	//draw little compass at the top
+		
+		drawCompass()
+		
+		if (model.state == "walk")
+			{drawStats()
+			drawMoney()}
+	//draw item inventory if its open
+		if (model.state == "inventory")
+			{drawInventory()}
+		
+		if (model.state == "charselect")
+			{drawCharSelect()}
+	
+		if (model.state == "battle" || model.state == "boss") {
+			drawBattle();
+		}
+
+
+	}
+	
+	function drawTown(){
+	
+		//town img is lindblum from ffix !!!
+		ctx.drawImage(town,0,0)
+		drawMenu()
+	}
+	
+	function drawShop() {
+		ctx.drawImage(shop,0,0)
+		drawMenu()
+	}
+	
+	function drawInn() {
+		ctx.drawImage(inn,0,0)
+		drawMenu()
+	}
+	
+	function drawBar() {
+		ctx.drawImage(bar,0,0)
+		drawMenu()
+	}
+	
+	function drawGameOverScreen() {
+		ctx.fillStyle = "black";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+		ctx.fillStyle = "white";
+		ctx.fillText('Game Over', 300, 300);
+	}
+
+	function drawStageClearedScreen() {
+		ctx.fillStyle = "black";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+		ctx.fillStyle = "white";
+		ctx.fillText('Stage Clear!', 300, 300);
+	}
+	
+	function drawAll()
+	{
+		//clear canvas
+		ctx.clearRect(0,0,canvas.width,canvas.height)
+		
+		//draw location
+		if(model.location == "dungeon")
+			{drawDungeon()}
+		else if(model.location == "town")
+			{drawTown()}
+		else if(model.location == "bar")
+			{drawBar()}
+		else if(model.location == "shop")
+			{drawShop(); drawMoney()}
+		else if(model.location == "inn")
+			{drawInn(); drawMoney()}
+		
+		if(model.currLine != null){ //if text isnt null
+			drawGameText()
+		}
+
+		if (model.lost == true) {
+			drawGameOverScreen();
+		}
+
+		if (model.clear == true) {
+			drawStageClearedScreen();
+		}
+	}
+
+    /* ### Initialization ### */ 
+    
+    function onLoad() {
+		//actual canvas
+        canvas = document.getElementById('myCanvas');
+        ctx = canvas.getContext('2d');
+		
+		//canvas to edit images
+		imgMan = document.getElementById('ImgManager');
+		ctx2 = imgMan.getContext('2d');
+		
+        svg = document.getElementById('mySVG');
+		
+		initKeys(canvas)
+
+		//prepare images
+		wall.src = "resources/wall.jpg";
+		wall.onload = function() { wall = addDepth(wall,0) };
+
+		depth1.src = "resources/wall.jpg";
+		depth1.onload = function() { depth1 = addDepth(depth1,1) };
+
+		depth2.src = "resources/wall.jpg";
+		depth2.onload = function() { depth2 = addDepth(depth2,2) };
+	
+		town.src = "resources/town.jpg";
+		shop.src = "resources/shop.png";
+		bar.src = "resources/bar.png";
+		inn.src = "resources/inn.png";
+	
+		cursor.src = "resources/cursor.png";
+		back.src = "resources/back.png";
+	
+		exit.src = "resources/exit.jpg";
+
+		goblin.src = "resources/goblin.png";
+		undead.src = "resources/undead.png";
+		dragon.src = "resources/dragon.png";
+	
+		HPotion.src = "resources/potion.png";
+		MPotion.src = "resources/mpotion.png";
+	
+		warrior.src = "resources/portrait1.png";
+		mage.src = "resources/portrait0.png";
+
+		boss.src = "resources/demon.png";
+	
+		updateVisible();
+		onTick();
+  
+    }
+	
+	
+</script>
+
+<body onload="onLoad();">    
+    
+
+    <h4>Dungeon Crawler</h4>
+    <table><tbody>
+    <tr>
+      <td>
+         <canvas id="myCanvas" width="800" height="600"></canvas>
+		 <canvas hidden id="ImgManager" width = "400" height="320"> </canvas>
+      </td>
+    </tbody><table>
+
+ 
+    
+</body>
+</html>   
